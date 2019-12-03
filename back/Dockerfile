@@ -24,7 +24,6 @@ FROM docdokuplm:payara
 
 ARG DOCDOKU_PLM_CODEBASE=http://localhost
 ARG HEAP_SIZE=2g
-ARG AS_ADMIN_PASSWORD=changeit
 ARG JWT_ENABLED=true
 ARG JWT_KEY=MyVerySecretPhrase
 ARG SESSION_ENABLED=false
@@ -47,7 +46,7 @@ ARG SMTP_PORT=25
 ARG SMTP_USER=myuser
 ARG SMTP_FROM_ADDR=docdokuplm@localhost
 
-ENV KEYSTORE_LOCATION /opt/payara41/dplm.jceks
+ENV KEYSTORE_LOCATION /opt/payara/dplm.jceks
 ENV KEYSTORE_KEY_ALIAS mykey
 ENV KEYSTORE_PASS changeit
 ENV KEYSTORE_KEY_PASS changeit
@@ -58,73 +57,62 @@ ENV SOLIDWORKS_SCHEMA_PATH /opt/plugins/solidworks/schema
 ENV CATIA_LICENSE_PATH /opt/plugins/catia/license.txt
 ENV OFFICE_PORT 8100
 ENV OFFICE_HOME /usr/lib/libreoffice
-ENV ASADMIN_PATH ${PAYARA_PATH}/bin
-ENV DOMAIN_DIR ${PAYARA_PATH}/glassfish/domains/domain1
+ENV ASADMIN_PATH ${PAYARA_DIR}//bin
+ENV DOMAIN_DIR /opt/payara/appserver/glassfish/domains/production
 ENV VAULT_PATH /var/lib/docdoku/vault
 ENV NATIVE_LIBS /opt/native-libs
 
 RUN \
  keytool -genseckey -storetype JCEKS -keyalg AES -keysize 256 -keystore ${KEYSTORE_LOCATION} -storepass ${KEYSTORE_PASS} -keypass ${KEYSTORE_KEY_PASS}
 
-RUN echo 'AS_ADMIN_PASSWORD=\n\
-AS_ADMIN_NEWPASSWORD='${AS_ADMIN_PASSWORD}'\n\
-EOF\n'\
->> /opt/tmpfile
-
-RUN echo 'AS_ADMIN_PASSWORD='${AS_ADMIN_PASSWORD}'\n\
-EOF\n'\
->> /opt/pwdfile
+RUN \
+ mkdir -p /opt/payara/appserver/glassfish/domains/production/autodeploy
 
 RUN \
  ${ASADMIN_PATH}/asadmin start-domain && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/tmpfile change-admin-password && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile enable-secure-admin && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile create-custom-resource --restype java.util.Properties --factoryclass org.glassfish.resources.custom.factory.PropertiesFactory --property="" docdokuplm.config && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile create-custom-resource --restype java.util.Properties --factoryclass org.glassfish.resources.custom.factory.PropertiesFactory --property="" auth.config && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile create-custom-resource --restype java.util.Properties --factoryclass org.glassfish.resources.custom.factory.PropertiesFactory --property="" security.config && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile create-custom-resource --restype java.util.Properties --factoryclass org.glassfish.resources.custom.factory.PropertiesFactory --property="" elasticsearch.config && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile create-custom-resource --restype java.util.Properties --factoryclass org.glassfish.resources.custom.factory.PropertiesFactory --property="" office.config && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile create-jdbc-connection-pool --restype javax.sql.ConnectionPoolDataSource --datasourceclassname com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource --property="" DocDokuPLMPool && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile create-jdbc-resource --connectionpoolid DocDokuPLMPool jdbc/docdokuPU && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile create-jvm-options -Dfile.encoding=UTF-8 && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile delete-jvm-options '-Xmx512m' && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile create-jvm-options -Xmx${HEAP_SIZE} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile create-javamail-resource --mailhost ${SMTP_HOST} --mailuser ${SMTP_USER} --fromaddress ${SMTP_FROM_ADDR} --property mail.smtp.host=${SMTP_HOST}:mail.smtp.starttls.enable=false:mail.smtp.port=${SMTP_PORT}:mail.smtp.auth=false mail/docdokuSMTP && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set server.network-config.protocols.protocol.http-listener-1.http.upload-timeout-enabled=false && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set server.network-config.protocols.protocol.http-listener-1.http.connection-upload-timeout-millis=-1 && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.jdbc-connection-pool.DocDokuPLMPool.property.URL=${DATABASE_URL} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.jdbc-connection-pool.DocDokuPLMPool.property.user=${DATABASE_USER} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.jdbc-connection-pool.DocDokuPLMPool.property.password=${DATABASE_PWD} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.docdokuplm.config.property.vaultPath=${VAULT_PATH} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.docdokuplm.config.property.codebase=${DOCDOKU_PLM_CODEBASE} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.auth.config.property."jwt\.enabled"=${JWT_ENABLED} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.auth.config.property."jwt\.key"=${JWT_KEY} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.auth.config.property."session\.enabled"=${SESSION_ENABLED} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.auth.config.property."basic\.header\.enabled"=${BASIC_AUTH_ENABLED} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.elasticsearch.config.property.serverUri=${ES_SERVER_URI} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.elasticsearch.config.property.number_of_shards=${ES_SERVER_SHARDS} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.elasticsearch.config.property.auto_expand_replicas="${ES_SERVER_AUTO_EXPAND_REPLICAS}" && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.elasticsearch.config.property.number_of_replicas=${ES_SERVER_REPLICAS} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.elasticsearch.config.property.password=${ES_SERVER_PWD} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.elasticsearch.config.property.username=${ES_SERVER_USERNAME} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.elasticsearch.config.property.awsService=${ES_SERVER_AWS_SERVICE} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.elasticsearch.config.property.awsRegion=${ES_SERVER_AWS_REGION} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.elasticsearch.config.property.awsAccessKey=${ES_SERVER_AWS_KEY} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.elasticsearch.config.property.awsSecretKey=${ES_SERVER_AWS_SECRET} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.office.config.property.office_home=${OFFICE_HOME} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.office.config.property.office_port=${OFFICE_PORT} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.security.config.property.keystoreLocation=${KEYSTORE_LOCATION} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.security.config.property.keystorePass=${KEYSTORE_PASS} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.security.config.property.keyAlias=${KEYSTORE_KEY_ALIAS} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.security.config.property.keystoreType=${KEYSTORE_TYPE} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set resources.custom-resource.security.config.property.keyPass=${KEYSTORE_KEY_PASS} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile set server.java-config.native-library-path-prefix=${NATIVE_LIBS} && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile create-custom-resource --restype java.lang.String --factoryclass org.glassfish.resources.custom.factory.PrimitivesAndStringFactory --property value=${SOLIDWORKS_LICENSE_PATH} datakit/solidworks/licensePath && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile create-custom-resource --restype java.lang.String --factoryclass org.glassfish.resources.custom.factory.PrimitivesAndStringFactory --property value=${SOLIDWORKS_SCHEMA_PATH} datakit/solidworks/schemaDir && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile create-custom-resource --restype java.lang.String --factoryclass org.glassfish.resources.custom.factory.PrimitivesAndStringFactory --property value=${CATIA_LICENSE_PATH} datakit/catia/licensePath && \
- ${ASADMIN_PATH}/asadmin --user admin --passwordfile=/opt/pwdfile stop-domain && \
- rm /opt/pwdfile && \
- rm /opt/tmpfile
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-custom-resource --restype java.util.Properties --factoryclass org.glassfish.resources.custom.factory.PropertiesFactory --property="" docdokuplm.config && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-custom-resource --restype java.util.Properties --factoryclass org.glassfish.resources.custom.factory.PropertiesFactory --property="" auth.config && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-custom-resource --restype java.util.Properties --factoryclass org.glassfish.resources.custom.factory.PropertiesFactory --property="" security.config && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-custom-resource --restype java.util.Properties --factoryclass org.glassfish.resources.custom.factory.PropertiesFactory --property="" elasticsearch.config && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-custom-resource --restype java.util.Properties --factoryclass org.glassfish.resources.custom.factory.PropertiesFactory --property="" office.config && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-jdbc-connection-pool --restype javax.sql.ConnectionPoolDataSource --datasourceclassname com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource --property="" DocDokuPLMPool && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-jdbc-resource --connectionpoolid DocDokuPLMPool jdbc/docdokuPU && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-jvm-options -Dfile.encoding=UTF-8 && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} delete-jvm-options '-Xmx512m' && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-jvm-options -Xmx${HEAP_SIZE} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-javamail-resource --mailhost ${SMTP_HOST} --mailuser ${SMTP_USER} --fromaddress ${SMTP_FROM_ADDR} --property mail.smtp.host=${SMTP_HOST}:mail.smtp.starttls.enable=false:mail.smtp.port=${SMTP_PORT}:mail.smtp.auth=false mail/docdokuSMTP && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set server.network-config.protocols.protocol.http-listener-1.http.upload-timeout-enabled=false && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set server.network-config.protocols.protocol.http-listener-1.http.connection-upload-timeout-millis=-1 && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.jdbc-connection-pool.DocDokuPLMPool.property.URL=${DATABASE_URL} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.jdbc-connection-pool.DocDokuPLMPool.property.user=${DATABASE_USER} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.jdbc-connection-pool.DocDokuPLMPool.property.password=${DATABASE_PWD} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.docdokuplm.config.property.vaultPath=${VAULT_PATH} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.docdokuplm.config.property.codebase=${DOCDOKU_PLM_CODEBASE} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.auth.config.property."jwt\.enabled"=${JWT_ENABLED} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.auth.config.property."jwt\.key"=${JWT_KEY} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.auth.config.property."session\.enabled"=${SESSION_ENABLED} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.auth.config.property."basic\.header\.enabled"=${BASIC_AUTH_ENABLED} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.elasticsearch.config.property.serverUri=${ES_SERVER_URI} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.elasticsearch.config.property.number_of_shards=${ES_SERVER_SHARDS} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.elasticsearch.config.property.auto_expand_replicas="${ES_SERVER_AUTO_EXPAND_REPLICAS}" && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.elasticsearch.config.property.number_of_replicas=${ES_SERVER_REPLICAS} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.elasticsearch.config.property.password=${ES_SERVER_PWD} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.elasticsearch.config.property.username=${ES_SERVER_USERNAME} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.elasticsearch.config.property.awsService=${ES_SERVER_AWS_SERVICE} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.elasticsearch.config.property.awsRegion=${ES_SERVER_AWS_REGION} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.elasticsearch.config.property.awsAccessKey=${ES_SERVER_AWS_KEY} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.elasticsearch.config.property.awsSecretKey=${ES_SERVER_AWS_SECRET} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.office.config.property.office_home=${OFFICE_HOME} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.office.config.property.office_port=${OFFICE_PORT} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.security.config.property.keystoreLocation=${KEYSTORE_LOCATION} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.security.config.property.keystorePass=${KEYSTORE_PASS} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.security.config.property.keyAlias=${KEYSTORE_KEY_ALIAS} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.security.config.property.keystoreType=${KEYSTORE_TYPE} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.security.config.property.keyPass=${KEYSTORE_KEY_PASS} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set server.java-config.native-library-path-prefix=${NATIVE_LIBS} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-custom-resource --restype java.lang.String --factoryclass org.glassfish.resources.custom.factory.PrimitivesAndStringFactory --property value=${SOLIDWORKS_LICENSE_PATH} datakit/solidworks/licensePath && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-custom-resource --restype java.lang.String --factoryclass org.glassfish.resources.custom.factory.PrimitivesAndStringFactory --property value=${SOLIDWORKS_SCHEMA_PATH} datakit/solidworks/schemaDir && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-custom-resource --restype java.lang.String --factoryclass org.glassfish.resources.custom.factory.PrimitivesAndStringFactory --property value=${CATIA_LICENSE_PATH} datakit/catia/licensePath && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} stop-domain
 
-ENTRYPOINT ${ASADMIN_PATH}/asadmin start-domain --debug true -v domain1
-
+ENTRYPOINT ${ASADMIN_PATH}/asadmin start-domain --debug true -v production

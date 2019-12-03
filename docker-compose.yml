@@ -48,7 +48,7 @@ services:
       args:
         - DOCDOKU_PLM_CODEBASE=https://docdokuplm.local:10080
         - HEAP_SIZE=1g
-        - AS_ADMIN_PASSWORD=changeit
+        #- AS_ADMIN_PASSWORD=changeit
         - JWT_ENABLED=true
         - JWT_KEY=MyVerySecretPhrase
         - SESSION_ENABLED=false
@@ -71,7 +71,7 @@ services:
         #- ES_SERVER_AWS_KEY=
         #- ES_SERVER_AWS_SECRET=
     volumes:
-      - "./volumes/autodeploy:/opt/payara41/glassfish/domains/domain1/autodeploy"
+      - "./volumes/autodeploy:/opt/payara/appserver/glassfish/domains/production/autodeploy"
       - "./volumes/vault:/var/lib/docdoku/vault"
       - "./volumes/plugins:/opt/plugins"
       - "./volumes/native-libs:/opt/native-libs"

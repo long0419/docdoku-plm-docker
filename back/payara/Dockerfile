@@ -19,7 +19,7 @@
 ## DocDokuPLM server docker image dependencies
 #
 
-FROM payara/server-full:4.181
+FROM payara/server-full:5.194
 
 ENV IFCCONVERT_URL https://github.com/IfcOpenShell/IfcOpenShell/releases/download/v0.5.0-preview2/IfcConvert-master-9ad68db-linux64.zip
 ENV DECIMATER_URL https://github.com/docdoku/docdoku-plm-openmesh-decimater/raw/master/builds/decimater-linux-64.zip
@@ -28,8 +28,15 @@ ENV MYSQL_CONNECTOR_URL https://dev.mysql.com/get/Downloads/Connector-J/mysql-co
 
 USER root
 
+
+RUN export DEBIAN_FRONTEND=noninteractive; \
+    export DEBCONF_NONINTERACTIVE_SEEN=true; \
+    echo 'tzdata tzdata/Areas select Etc' | debconf-set-selections; \
+    echo 'tzdata tzdata/Zones/Etc select UTC' | debconf-set-selections;
+
 RUN \
- apt-get update && apt-get install -y \
+ apt-get update -qqy && apt-get install -qqy --no-install-recommends \
+ tzdata \
  freecad  \
  assimp-utils \
  libreoffice  \
@@ -78,10 +85,14 @@ RUN \
 RUN \
  wget --quiet -O /opt/mysql-connector-java-5.1.46.zip ${MYSQL_CONNECTOR_URL} && \
  unzip -qq /opt/mysql-connector-java-5.1.46.zip -d /opt/ && \
- mkdir -p /opt/payara41/glassfish/domains/domain1/lib/ && \
- mv /opt/mysql-connector-java-5.1.46/mysql-connector-java-5.1.46-bin.jar ${PAYARA_PATH}/glassfish/domains/domain1/lib/mysql-connector-java-5.1.46-bin.jar && \
+ mkdir -p /opt/payara/appserver/glassfish/domains/production/lib/ && \
+ mv /opt/mysql-connector-java-5.1.46/mysql-connector-java-5.1.46-bin.jar /opt/payara/appserver/glassfish/domains/production/lib/mysql-connector-java-5.1.46-bin.jar && \
  rm /opt/mysql-connector-java-5.1.46.zip && \
  rm -rf /opt/mysql-connector-java-5.1.46
+
+RUN \
+ apt-get clean && \
+ rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN \
  chown -R payara:payara /opt
