@@ -110,6 +110,9 @@ RUN \
  ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.security.config.property.keystoreType=${KEYSTORE_TYPE} && \
  ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set resources.custom-resource.security.config.property.keyPass=${KEYSTORE_KEY_PASS} && \
  ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set server.java-config.native-library-path-prefix=${NATIVE_LIBS} && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set configs.config.server-config.admin-service.das-config.autodeploy-enabled=true && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set configs.config.server-config.admin-service.das-config.autodeploy-polling-interval-in-seconds=10 && \
+ ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set configs.config.server-config.admin-service.das-config.autodeploy-retry-timeout=10 && \
  ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-custom-resource --restype java.lang.String --factoryclass org.glassfish.resources.custom.factory.PrimitivesAndStringFactory --property value=${SOLIDWORKS_LICENSE_PATH} datakit/solidworks/licensePath && \
  ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-custom-resource --restype java.lang.String --factoryclass org.glassfish.resources.custom.factory.PrimitivesAndStringFactory --property value=${SOLIDWORKS_SCHEMA_PATH} datakit/solidworks/schemaDir && \
  ${ASADMIN_PATH}/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-custom-resource --restype java.lang.String --factoryclass org.glassfish.resources.custom.factory.PrimitivesAndStringFactory --property value=${CATIA_LICENSE_PATH} datakit/catia/licensePath && \
