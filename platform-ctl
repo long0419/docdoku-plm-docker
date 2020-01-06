@@ -98,6 +98,10 @@ down() {
 
 up () {
     echo "Running the platform ..."
+    mkdir -p ${SCRIPT_DIR}/volumes
+    mkdir -p ${SCRIPT_DIR}/volumes/autodeploy
+    chown 1000:1000 ${SCRIPT_DIR}/volumes/autodeploy
+    chmod +wx ${SCRIPT_DIR}/volumes/autodeploy
     docker-compose up -d
 }
 
