@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # DocDoku, Professional Open Source
-# Copyright 2006 - 2017 DocDoku SARL
+# Copyright 2006 - 2020 DocDoku SARL
 #
 # This file is part of DocDokuPLM.
 #
@@ -19,7 +19,7 @@
 # along with DocDokuPLM.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-SCRIPT_VERSION=0.0.4
+SCRIPT_VERSION=0.0.5
 
 # Repositories
 EPLMP_SSH_URL=git@github.com:polarsys/eplmp.git
@@ -100,8 +100,7 @@ up () {
     echo "Running the platform ..."
     mkdir -p ${SCRIPT_DIR}/volumes
     mkdir -p ${SCRIPT_DIR}/volumes/autodeploy
-    chown 1000:1000 ${SCRIPT_DIR}/volumes/autodeploy
-    chmod +wx ${SCRIPT_DIR}/volumes/autodeploy
+    chmod a+rwx ${SCRIPT_DIR}/volumes/autodeploy
     docker-compose up -d
 }
 
