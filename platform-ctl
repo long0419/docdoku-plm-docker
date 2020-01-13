@@ -237,8 +237,6 @@ status () {
     echo -e "---------------------------------------------------"
     echo -e "Disk usage"
     echo -e "Size    Path"
-    du -hs "${SCRIPT_DIR}/volumes/db"
-    du -hs "${SCRIPT_DIR}/volumes/elasticsearch-data"
     du -hs "${SCRIPT_DIR}/volumes/vault"
 }
 
