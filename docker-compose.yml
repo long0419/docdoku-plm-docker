@@ -192,7 +192,7 @@ services:
     environment:
       KAFKA_ADVERTISED_HOST_NAME: kafka
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_CREATE_TOPICS: "CONVERT:5:1"
+      KAFKA_CREATE_TOPICS: "CONVERT:1:1"
     networks:
       - network
     depends_on:
