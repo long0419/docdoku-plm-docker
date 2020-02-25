@@ -30,7 +30,7 @@ DOCDOKU_WEB_FRONT_SSH_URL=git@github.com:docdoku/docdoku-web-front.git
 DOCDOKU_WEB_FRONT_HTTPS_URL=https://github.com/docdoku/docdoku-web-front.git
 DOCDOKU_PLM_SAMPLE_SSH_URL=git@github.com:docdoku/docdoku-plm-sample-data.git
 DOCDOKU_PLM_SAMPLE_HTTPS_URL=https://github.com/docdoku/docdoku-plm-sample-data.git
-DOCDOKU_PLM_VERSION=2.5.5
+DOCDOKU_PLM_VERSION=2.6.0-SNAPSHOT
 
 # Resolve script dir (may be a symlink or sourced script)
 dir () {
@@ -81,15 +81,15 @@ init-repo () {
     fi
 
     if [ "$PROTOCOL" == "ssh" ]  ; then
-        git clone --single-branch -b develop --depth 1 "${EPLMP_SSH_URL}" "${SOURCES_DIR}/eplmp"
-        git clone --single-branch -b dev --depth 1 "${DOCDOKU_PLM_SSH_URL}" "${SOURCES_DIR}/docdoku-plm"
-        git clone --single-branch -b dev --depth 1 "${DOCDOKU_WEB_FRONT_SSH_URL}" "${SOURCES_DIR}/docdoku-web-front"
-        git clone --single-branch -b dev --depth 1 "${DOCDOKU_PLM_SAMPLE_SSH_URL}" "${SOURCES_DIR}/docdoku-plm-sample-data"
+        git clone "${EPLMP_SSH_URL}" "${SOURCES_DIR}/eplmp"
+        git clone "${DOCDOKU_PLM_SSH_URL}" "${SOURCES_DIR}/docdoku-plm"
+        git clone "${DOCDOKU_WEB_FRONT_SSH_URL}" "${SOURCES_DIR}/docdoku-web-front"
+        git clone "${DOCDOKU_PLM_SAMPLE_SSH_URL}" "${SOURCES_DIR}/docdoku-plm-sample-data"
     else
-        git clone --single-branch -b develop --depth 1 "${EPLMP_HTTPS_URL}" "${SOURCES_DIR}/eplmp"
-        git clone --single-branch -b dev --depth 1 "${DOCDOKU_PLM_HTTPS_URL}" "${SOURCES_DIR}/docdoku-plm"
-        git clone --single-branch -b dev --depth 1 "${DOCDOKU_WEB_FRONT_HTTPS_URL}" "${SOURCES_DIR}/docdoku-web-front"
-        git clone --single-branch -b dev --depth 1 "${DOCDOKU_PLM_SAMPLE_HTTPS_URL}" "${SOURCES_DIR}/docdoku-plm-sample-data"
+        git clone "${EPLMP_HTTPS_URL}" "${SOURCES_DIR}/eplmp"
+        git clone "${DOCDOKU_PLM_HTTPS_URL}" "${SOURCES_DIR}/docdoku-plm"
+        git clone "${DOCDOKU_WEB_FRONT_HTTPS_URL}" "${SOURCES_DIR}/docdoku-web-front"
+        git clone "${DOCDOKU_PLM_SAMPLE_HTTPS_URL}" "${SOURCES_DIR}/docdoku-plm-sample-data"
     fi
 }
 
@@ -191,12 +191,7 @@ deploy-plm () {
   rm "${SCRIPT_DIR}"/volumes/autodeploy/.autodeploystatus/converter* 2> /dev/null
   rm "${SCRIPT_DIR}"/volumes/autodeploy/.autodeploystatus/importer* 2> /dev/null
 
-  cp "${SOURCES_DIR}/docdoku-plm/converter-all/converter-all-ear/target/converter-all-ear-${DOCDOKU_PLM_VERSION}.ear" \
-       "${SOURCES_DIR}/docdoku-plm/converter-dae/converter-dae-ear/target/converter-dae-ear-${DOCDOKU_PLM_VERSION}.ear" \
-       "${SOURCES_DIR}/docdoku-plm/converter-ifc/converter-ifc-ear/target/converter-ifc-ear-${DOCDOKU_PLM_VERSION}.ear" \
-       "${SOURCES_DIR}/docdoku-plm/converter-obj/converter-obj-ear/target/converter-obj-ear-${DOCDOKU_PLM_VERSION}.ear" \
-       "${SOURCES_DIR}/docdoku-plm/converter-step/converter-step-ear/target/converter-step-ear-${DOCDOKU_PLM_VERSION}.ear" \
-       "${SOURCES_DIR}/docdoku-plm/importer-attributes/importer-attributes-ear/target/importer-attributes-ear-${DOCDOKU_PLM_VERSION}.ear" \
+  cp "${SOURCES_DIR}/docdoku-plm/importer-attributes/importer-attributes-ear/target/importer-attributes-ear-${DOCDOKU_PLM_VERSION}.ear" \
         "${SCRIPT_DIR}/volumes/autodeploy/"
 }
 
@@ -204,11 +199,6 @@ verify-artifacts () {
     echo "Verifying artifacts ..."
     docker-compose run build-env md5sum \
         "/src/eplmp/eplmp-server/eplmp-server-ear/target/eplmp-server-ear.ear" \
-        "/src/docdoku-plm/converter-all/converter-all-ear/target/converter-all-ear-${DOCDOKU_PLM_VERSION}.ear" \
-        "/src/docdoku-plm/converter-dae/converter-dae-ear/target/converter-dae-ear-${DOCDOKU_PLM_VERSION}.ear" \
-        "/src/docdoku-plm/converter-ifc/converter-ifc-ear/target/converter-ifc-ear-${DOCDOKU_PLM_VERSION}.ear" \
-        "/src/docdoku-plm/converter-obj/converter-obj-ear/target/converter-obj-ear-${DOCDOKU_PLM_VERSION}.ear" \
-        "/src/docdoku-plm/converter-step/converter-step-ear/target/converter-step-ear-${DOCDOKU_PLM_VERSION}.ear" \
         "/src/docdoku-plm/importer-attributes/importer-attributes-ear/target/importer-attributes-ear-${DOCDOKU_PLM_VERSION}.ear" \
         "/src/docdoku-plm/docdoku-cli/target/docdoku-cli-jar-with-dependencies.jar" \
         "/src/docdoku-plm/docdoku-api/target/docdoku-api-${DOCDOKU_PLM_VERSION}-json.jar" \
