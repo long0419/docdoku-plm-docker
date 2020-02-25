@@ -25,7 +25,6 @@ services:
   # Web front: nginx server on host source files
   # volumes: static files from web front source on the host.
   front:
-    container_name: docdoku-plm-docker_front
     build:
       context: ./front
     networks:
@@ -36,10 +35,13 @@ services:
       - ./volumes/web-front:/usr/share/nginx/dist
       - ./volumes/src/docdoku-web-front/app:/usr/share/nginx/app
 
-  # Payara instance - JEE application server
+  # Payara instance - JEE 8 application server
   back:
-    container_name: docdoku-plm-docker_back
-    mem_limit: 1g
+    mem_limit: 4g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     depends_on:
       - db
       - es
@@ -53,9 +55,10 @@ services:
         - JWT_KEY=MyVerySecretPhrase
         - SESSION_ENABLED=false
         - BASIC_AUTH_ENABLED=false
-        - DATABASE_USER=docdokuplm_user
-        - DATABASE_PWD=changeit
-        - DATABASE_URL=jdbc:mysql://db:3306/docdokuplm?useSSL=false
+        - DATABASE_USER=my_user
+        - DATABASE_PWD=my_password
+        - DATABASE_SERVER_NAME=db
+        - DATABASE_NAME=my_db
         - ES_SERVER_URI=http://es:9200
         - ES_SERVER_SHARDS=4
         - ES_SERVER_AUTO_EXPAND_REPLICAS=0-3
@@ -69,6 +72,7 @@ services:
     volumes:
       - ./volumes/autodeploy:/opt/payara/appserver/glassfish/domains/production/autodeploy
       - ./volumes/vault:/var/lib/docdoku/vault
+      - ./volumes/conversions:/var/lib/docdoku/conversions
       - ./volumes/plugins:/opt/plugins
       - ./volumes/native-libs:/opt/native-libs
     networks:
@@ -78,15 +82,10 @@ services:
       - 14848:4848
       - 19009:9009
       - 18686:8686
-    links:
-      - db:db
-      - es:es
-      - smtp:smtp
 
   # Nginx global proxy
   # The application will run at http://localhost:10080, change if needed
   proxy:
-    container_name: docdoku-plm-docker_proxy
     depends_on:
       - front
       - back
@@ -94,6 +93,7 @@ services:
       - kibana
       - smtp
       - adminer
+      - kafka
     build:
       context: ./proxy
       args:
@@ -108,17 +108,9 @@ services:
       - 10083:10083
       - 10084:10084
       - 10085:10085
-    links:
-      - front:front
-      - back:back
-      - es:es
-      - kibana:kibana
-      - smtp:smtp
-      - adminer:adminer
 
   # ElasticSearch instance
   es:
-    container_name: docdoku-plm-docker_es
     image: docker.elastic.co/elasticsearch/elasticsearch:6.6.1
     environment:
       - cluster.name=docdokuplm
@@ -135,10 +127,9 @@ services:
       - 19200:9200
       - 19300:9300
     volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data
+      - es:/usr/share/elasticsearch/data
   # Kibana instance
   kibana:
-     container_name: docdoku-plm-docker_kibana
      image: docker.elastic.co/kibana/kibana:6.6.1
      environment:
        - SERVER_NAME=kibana
@@ -149,23 +140,22 @@ services:
        - es
      ports:
        - 5601:5601
-     links:
-       - es:es
 
-  # MySQL instance
   db:
-    container_name: docdoku-plm-docker_db
-    build: ./db
+    image: postgres:11.2
+    environment:
+      - POSTGRES_USER=my_user
+      - POSTGRES_PASSWORD=my_password
+      - POSTGRES_DB=my_db
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
     networks:
       - network
-    ports:
-      - 13306:3306
     volumes:
-      - db-data:/var/lib/mysql
+      - db:/var/lib/postgresql/data
 
-  # DocDokuPLM build env
+
+    # DocDokuPLM build env
   build-env:
-    container_name: docdoku-plm-docker_build-env
     build: ./build-env
     depends_on: 
       - back
@@ -178,36 +168,55 @@ services:
       - network
     links:
       - proxy:docdokuplm.local
-      - back:back
 
   # View emails sent by the platform in browser
   smtp:
-    container_name: docdoku-plm-docker_smtp
     image: mailhog/mailhog
     networks:
       - network
-    ports: 
-      - 1025:1025
-      - 8025:8025
 
   # SQL Management
   adminer:
-    container_name: docdoku-plm-docker_adminer
     image: adminer:4.7.1-standalone
     networks:
       - network
-    ports:
-      - 8282:8080
     depends_on: 
       - db
-    links:
-      - db:db
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    networks:
+      - network
+  kafka:
+    image: wurstmeister/kafka
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "CONVERT:5:1"
+    networks:
+      - network
+    depends_on:
+      - zookeeper
+
+  conversion_service:
+    image: docdoku/docdoku-plm-conversion-service
+    networks:
+      - network
+    volumes:
+      - ./volumes/vault:/data/vault
+      - ./volumes/conversions:/data/conversions
+    depends_on:
+      - kafka
+      - back
+    # Debug port
+    ports:
+      - 5005:5005
 
 networks:
   network:
     driver: bridge
 
 volumes:
-  db-data:
-  elasticsearch-data:
+  db:
+  es:
 

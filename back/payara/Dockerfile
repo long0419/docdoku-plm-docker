@@ -21,13 +21,9 @@
 
 FROM payara/server-full:5.194
 
-ENV IFCCONVERT_URL https://github.com/IfcOpenShell/IfcOpenShell/releases/download/v0.5.0-preview2/IfcConvert-master-9ad68db-linux64.zip
-ENV DECIMATER_URL https://github.com/docdoku/docdoku-plm-openmesh-decimater/raw/master/builds/decimater-linux-64.zip
-ENV MESHCONV_URL http://www.patrickmin.com/meshconv/linux64/meshconv
-ENV MYSQL_CONNECTOR_URL https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.46.zip
+ENV POSTGRES_CONNECTOR_URL https://jdbc.postgresql.org/download/postgresql-42.2.5.jar
 
 USER root
-
 
 RUN export DEBIAN_FRONTEND=noninteractive; \
     export DEBCONF_NONINTERACTIVE_SEEN=true; \
@@ -68,28 +64,12 @@ RUN \
 
 RUN \
  mkdir -p /var/lib/docdoku/vault && \
- chown -R payara:payara /var/lib/docdoku/vault && \
- mkdir -p /opt/ifcconvert && \
- mkdir -p /opt/decimater && \
- mkdir -p /opt/meshconv && \
- wget --quiet -O /opt/ifcconvert.zip ${IFCCONVERT_URL}  && \
- wget --quiet -O /opt/decimater.zip ${DECIMATER_URL} && \
- wget --quiet -O /opt/meshconv/meshconv ${MESHCONV_URL} && \
- unzip -qq /opt/ifcconvert.zip -d /opt/ifcconvert && \
- unzip -qq /opt/decimater.zip -d /opt/ && \
- chmod +x /opt/meshconv/meshconv && \
- rm /opt/ifcconvert.zip && \
- rm /opt/decimater.zip
-
+ mkdir -p /var/lib/docdoku/conversions && \
+ chown -R payara:payara /var/lib/docdoku
 
 RUN \
- wget --quiet -O /opt/mysql-connector-java-5.1.46.zip ${MYSQL_CONNECTOR_URL} && \
- unzip -qq /opt/mysql-connector-java-5.1.46.zip -d /opt/ && \
- mkdir -p /opt/payara/appserver/glassfish/domains/production/lib/ && \
- mv /opt/mysql-connector-java-5.1.46/mysql-connector-java-5.1.46-bin.jar /opt/payara/appserver/glassfish/domains/production/lib/mysql-connector-java-5.1.46-bin.jar && \
- rm /opt/mysql-connector-java-5.1.46.zip && \
- rm -rf /opt/mysql-connector-java-5.1.46
-
+ wget --quiet -O /opt/payara/appserver/glassfish/domains/production/lib/postgresql-42.2.5.jar ${POSTGRES_CONNECTOR_URL} && \
+ mkdir -p /opt/payara/appserver/glassfish/domains/production/lib/
 RUN \
  apt-get clean && \
  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

@@ -58,7 +58,9 @@ cd "${SCRIPT_DIR}" || quit "ERROR: Cannot find platform-ctl home directory" -1
 init-volumes () {
     echo "Preparing volumes ..."
     mkdir -p "${SCRIPT_DIR}"/volumes
-    mkdir -p "${SCRIPT_DIR}"/volumes/{db,vault,plugins,native-libs,m2,npm,autodeploy,elasticsearch-data,web-front}
+    mkdir -p "${SCRIPT_DIR}"/volumes/{vault,conversions,plugins,native-libs,m2,npm,autodeploy,web-front}
+    chmod a+rwx ${SCRIPT_DIR}/volumes/autodeploy
+    chmod a+rwx ${SCRIPT_DIR}/volumes/conversions
 }
 
 init-repo () {
@@ -98,9 +100,7 @@ down() {
 
 up () {
     echo "Running the platform ..."
-    mkdir -p ${SCRIPT_DIR}/volumes
-    mkdir -p ${SCRIPT_DIR}/volumes/autodeploy
-    chmod a+rwx ${SCRIPT_DIR}/volumes/autodeploy
+    init-volumes
     docker-compose up -d
 }
 
@@ -358,6 +358,12 @@ reset () {
   esac
 }
 
+recreate () {
+  SERVICE=$1
+  docker-compose up --force-recreate --no-deps -d ${SERVICE}
+}
+
+
 do-reset () {
   echo -e "Recreating database ..." && \
   docker exec -it docdoku-plm-docker_db bash -c \
@@ -404,6 +410,7 @@ usage () {
     echo -e "  ${GREEN}run 'command'${NC}:               Run a custom command in build env"
     echo -e "  ${GREEN}asadmin ['command']${NC}:         Run asadmin in payara container (accept commands)"
     echo -e "  ${GREEN}insert-sample <login> <pwd>${NC}: Insert some sample data into a new workspace"
+    echo -e "  ${GREEN}recreate <service>${NC}:          Force recreate the supplied service"
     echo -e "  ${GREEN}help${NC}:                        Display this lines"
 
     echo -e ""
@@ -486,6 +493,9 @@ case "$1" in
     ;;
 "reset")
     reset
+    ;;
+"recreate")
+    recreate "$2"
     ;;
 *)
     usage
