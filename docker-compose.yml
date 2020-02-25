@@ -208,9 +208,17 @@ services:
     depends_on:
       - kafka
       - back
-    # Debug port
-    ports:
-      - 5005:5005
+
+  conversion_service_2:
+    image: docdoku/docdoku-plm-conversion-service
+    networks:
+      - network
+    volumes:
+      - ./volumes/vault:/data/vault
+      - ./volumes/conversions:/data/conversions
+    depends_on:
+      - kafka
+      - back
 
 networks:
   network:
