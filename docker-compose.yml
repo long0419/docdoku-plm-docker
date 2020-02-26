@@ -152,9 +152,9 @@ services:
       - network
     volumes:
       - db:/var/lib/postgresql/data
+      - ./volumes/dumps:/var/data/dumps
 
-
-    # DocDokuPLM build env
+  # DocDokuPLM build env
   build-env:
     build: ./build-env
     depends_on: 

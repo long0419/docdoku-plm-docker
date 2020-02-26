@@ -54,5 +54,4 @@ RUN mkdir /src && \
 
 USER dev
 
-# Allow dependency cache control
-VOLUME ["/src", "/root/.m2", "/root/.npm"]
+VOLUME ["/src"]
