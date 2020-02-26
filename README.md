@@ -22,8 +22,13 @@ First step is to clone the repositories and to create the base images. This may 
 
 You can clone with ssh or https (default).
 
-	./platform-ctl init-repo [ssh|https]
+	./platform-ctl init-repo ssh
 	./platform-ctl build-images
+
+Make sure to checkout the branches you want to work with
+
+    cd volumes/src/<project>
+    git checkout <some_branch> 
 
 Then it's time to package some artifacts
 
@@ -39,7 +44,7 @@ Deploy the artifacts
 
 Launch your browser once artifacts are all deployed
 
-	./platform-ctl browser [dev|prod]
+	./platform-ctl browser dev
 
 ### Logging and monitoring
 

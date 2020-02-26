@@ -54,4 +54,4 @@ RUN mkdir /src && \
 
 USER dev
 
-VOLUME ["/src"]
+VOLUME ["/src", "/root/.m2", "/root/.npm"]
