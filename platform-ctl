@@ -195,19 +195,8 @@ deploy-plm () {
   rm "${SCRIPT_DIR}"/volumes/autodeploy/.autodeploystatus/converter* 2> /dev/null
   rm "${SCRIPT_DIR}"/volumes/autodeploy/.autodeploystatus/importer* 2> /dev/null
 
-  cp "${SOURCES_DIR}/docdoku-plm/importer-attributes/importer-attributes-ear/target/importer-attributes-ear-*.ear" \
+  cp "${SOURCES_DIR}/docdoku-plm/importer-attributes/importer-attributes-ear/target/"*.ear \
         "${SCRIPT_DIR}/volumes/autodeploy/"
-}
-
-verify-artifacts () {
-    echo "Verifying artifacts ..."
-    docker-compose run build-env md5sum \
-        "/src/eplmp/eplmp-server/eplmp-server-ear/target/eplmp-server-ear.ear" \
-        "/src/docdoku-plm/importer-attributes/importer-attributes-ear/target/importer-attributes-ear-*.ear" \
-        "/src/docdoku-plm/docdoku-cli/target/docdoku-cli-jar-with-dependencies.jar" \
-        "/src/docdoku-plm/docdoku-api/target/docdoku-api-*-json.jar" \
-        "/src/docdoku-plm/docdoku-api-java/target/docdoku-api-java-*-jar-with-dependencies.jar" \
-        "/src/docdoku-web-front/target/docdoku-web-front.zip"
 }
 
 logs (){
@@ -385,7 +374,6 @@ usage () {
     echo -e "  ${GREEN}build-artifacts${NC}:             Build the main artifacts from eplmp and docdoku-plm sources"
     echo -e "  ${GREEN}build <target>${NC}:              Build  specified artifact (target values: front, eplmp, plm, sample)"
     echo -e "  ${GREEN}test <target>${NC}:               Launch e2e tests. Target values: front, java-api)"
-    echo -e "  ${GREEN}verify-artifacts${NC}:            Verify the main artifacts"
     echo -e "  ${GREEN}deploy [target]${NC}:             Copy the main artifacts to the autodeploy volume. Target values (front, eplmp, plm)"
     echo -e "  ${GREEN}up${NC}:                          Start the containers"
     echo -e "  ${GREEN}down${NC}:                        Stop the containers"
@@ -420,9 +408,6 @@ case "$1" in
     ;;
 "build")
     build "$2"
-    ;;
-"verify-artifacts")
-    verify-artifacts
     ;;
 "deploy")
    deploy "$2"
