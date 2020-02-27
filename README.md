@@ -28,6 +28,8 @@ You can clone with ssh or https (default).
 Then it's time to package some artifacts
 
     ./platform-ctl build-artifacts
+    
+    注意这个地方：如果mvn install 报错， 需要修改plm 相关的版本号，从2.6.0 --》 2.5.8
 
 Start the platform
 
@@ -218,5 +220,9 @@ Run as root
     update-ca-certificates
 
 ### Others ...
+单独安装的时候 ：
+ek 安装方式：
 
-TODO ...
+docker run -it --name elasticsearch -d -p 9200:9200 -p 9300:9300 -p 5601:5601 docker.elastic.co/elasticsearch/elasticsearch:7.5.2
+
+docker run -it -d -e ELASTICSEARCH_URL=http://104.197.81.156:9200 --name kibana --network=container:competent_volhard docker.elastic.co/kibana/kibana:7.6.0
