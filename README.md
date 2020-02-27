@@ -225,4 +225,4 @@ ek 安装方式：
 
 docker run -it --name elasticsearch -d -p 9200:9200 -p 9300:9300 -p 5601:5601 docker.elastic.co/elasticsearch/elasticsearch:7.5.2
 
-docker run -it -d -e ELASTICSEARCH_URL=http://104.197.81.156:9200 --name kibana --network=container:competent_volhard docker.elastic.co/kibana/kibana:7.6.0
+docker run -it -d -e ELASTICSEARCH_URL=http://ip:9200 --name kibana --network=container:[containername] docker.elastic.co/kibana/kibana:7.6.0
